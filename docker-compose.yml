@@ -1,0 +1,27 @@
+version: '3.5'
+services:
+  imgpush:
+    ports:
+      - "5500:5000"
+    build: .
+    volumes:
+      - ./app:/app
+      - ./images:/images
+      - ./cache:/cache
+    environment:
+      #- OUTPUT_TYPE=png # Default: Same as Input file. An image type supported by imagemagick, e.g. png or jpg.
+      - MAX_SIZE_MB=100 # Default: 16. Max size per uploaded file in megabytes.
+      - MAX_UPLOADS_PER_DAY=200 # Default: 1000. Max uploads per IP address per day.
+      - MAX_UPLOADS_PER_HOUR=100 # Default: 100. Max uploads per IP address per hour.
+      - MAX_UPLOADS_PER_MINUTE=20 # Default: 20. Max uploads per IP address per minute.
+      #- ALLOWED_ORIGINS=['http://localhost', '*.meepaisa.com'] # Default: ['*']. Array of allowed origins, e.g., ['https://a.com'].
+      #- VALID_SIZES=[100,200,300] # Default: Any size. Array of allowed sizes for h= and w= params, e.g., [100, 200, 300].
+      - NAME_STRATEGY=uuidv4 # Default: randomstr. Options: randomstr (5 random chars) or uuidv4.
+      #- NUDE_FILTER_MAX_THRESHOLD=0.99 # Default: None. Max unsafe value from NudeNet library (0-0.99), to block nudity.
+      - USERNAME=""
+      - PASSWORD=""
+    restart: always
+    healthcheck:
+      start_period: 0s
+      test: ['CMD-SHELL', 'curl localhost:5500/liveness -s -f -o /dev/null || exit 1']
+      interval: 30s

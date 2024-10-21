@@ -1,0 +1,13 @@
+filetype
+Flask
+flask_cors
+flask_limiter
+wand
+Werkzeug
+gunicorn
+timeout-decorator
+nudenet
+jinja2
+itsdangerous
+Flask-BasicAuth
+
