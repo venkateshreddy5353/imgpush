@@ -297,7 +297,7 @@ def get_image(filename):
 
     return send_from_directory(settings.IMAGES_DIR, filename)
 
-@app.route("<string:filename>", methods=["DELETE"])
+@app.route("/<string:filename>", methods=["DELETE"])
 @basic_auth.required
 def delete_image(filename):
     """
