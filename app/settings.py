@@ -13,8 +13,8 @@ MAX_TMP_FILE_AGE = 5 * 60
 RESIZE_TIMEOUT = 5
 NUDE_FILTER_MAX_THRESHOLD = None
 ALLOW_VIDEO = True
-USERNAME="admin"
-PASSWORD="Changeme@123"
+USERNAME=""
+PASSWORD=""
 ALLOWED_FILETYPES=["jpeg","jpg","png","gif","doc","docx","pdf","txt","csv","ppt","pptx","xls","xlsx","zip","rar","js","html","css","xml","json","mp4","mp3","avi","mov"]
 
 VALID_SIZES = []
