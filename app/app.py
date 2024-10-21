@@ -30,7 +30,7 @@ basic_auth = BasicAuth(app)
 
 CORS(app, origins=settings.ALLOWED_ORIGINS)
 app.config["MAX_CONTENT_LENGTH"] = settings.MAX_SIZE_MB * 1024 * 1024
-limiter = Limiter(app, key_func=get_remote_address, default_limits=[])
+limiter = Limiter(get_remote_address,app=app, default_limits=[])
 
 app.use_x_sendfile = True
 
