@@ -119,6 +119,7 @@ def _generate_random_filename():
 
 
 def resize_with_aspect_ratio(path, width=None, height=None):
+    # Read the image
     image = cv2.imread(path)
     
     if image is None:
@@ -132,15 +133,25 @@ def resize_with_aspect_ratio(path, width=None, height=None):
     
     if width is None and height is None:
         raise ValueError("Either width or height must be specified.")
-
+    
     if width is not None:
-        # Calculate height based on the specified width
+        # Calculate height based on the specified width, maintaining aspect ratio
         new_height = int(width / aspect_ratio)
         resized_image = cv2.resize(image, (width, new_height), interpolation=cv2.INTER_LINEAR)
     else:
-        # Calculate width based on the specified height
+        # Calculate width based on the specified height, maintaining aspect ratio
         new_width = int(height * aspect_ratio)
         resized_image = cv2.resize(image, (new_width, height), interpolation=cv2.INTER_LINEAR)
+
+    # Check if the new dimensions match the desired aspect and fill if necessary
+    if width is not None and new_height != height:
+        # Creating a blank image with the desired size and filling it with black
+        final_image = cv2.copyMakeBorder(resized_image, 0, max(0, height - new_height), 0, 0, cv2.BORDER_CONSTANT, value=[0, 0, 0])
+        return final_image
+    elif height is not None and new_width != width:
+        # Creating a blank image with the desired size and filling it with black
+        final_image = cv2.copyMakeBorder(resized_image, 0, 0, 0, max(0, width - new_width), cv2.BORDER_CONSTANT, value=[0, 0, 0])
+        return final_image
 
     return resized_image
 
