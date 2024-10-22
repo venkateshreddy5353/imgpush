@@ -323,7 +323,7 @@ def get_image(filename):
             resized_image=resize_with_aspect_ratio(path, width, height)
             cv2.imwrite(resized_path, resized_image)
             # resized_image.save(filename=resized_path)
-            resized_image.close()
+            # resized_image.close()
         return send_from_directory(settings.CACHE_DIR, resized_filename)
 
     return send_from_directory(settings.IMAGES_DIR, filename)
