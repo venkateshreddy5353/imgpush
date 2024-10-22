@@ -129,11 +129,11 @@ def resize_with_aspect_ratio(path, width=None, height=None):
     if width is None:
         # Calculate height based on the specified width
         new_height = int(height / aspect_ratio)
-        resized_image = cv2.resize(image, (height, new_height))
+        resized_image = cv2.resize(image, (height, new_height),interpolation= cv2.INTER_LINEAR)
     else:
         # Calculate width based on the specified height
         new_width = int(width * aspect_ratio)
-        resized_image = cv2.resize(image, (new_width, width))
+        resized_image = cv2.resize(image, (new_width, width),interpolation= cv2.INTER_LINEAR)
 
     return resized_image
 
