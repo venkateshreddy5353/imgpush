@@ -2,7 +2,7 @@ FROM python:3.11-slim
 
 RUN apt-get update && \
     apt-get install -y \
-    libmagickwand-dev curl \
+    libmagickwand-dev curl ffmpeg libsm6 libxext6 python3-opencv\
     nginx
 
 COPY requirements.txt .
