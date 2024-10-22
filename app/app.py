@@ -310,8 +310,10 @@ def upload_image():
 
     if error:
         return jsonify(error=error), 400
+    
+    file_size=os.path.getsize(output_path)
 
-    return jsonify(filename=output_filename)
+    return jsonify(filename=output_filename,path=f"cdn.meepaisa.com/{output_filename}",size=file_size)
 
 
 @app.route("/<string:filename>")
