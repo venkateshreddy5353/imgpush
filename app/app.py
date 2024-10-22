@@ -23,6 +23,7 @@ from flask_basicauth import BasicAuth
 import settings
 import cv2
 
+
 # # Load the image
 # image = cv2.imread('input_image.jpg')
 
@@ -117,7 +118,8 @@ def _generate_random_filename():
         )
 
 
-def resize_with_aspect_ratio(image, width=None, height=None):
+def resize_with_aspect_ratio(path, width=None, height=None):
+    image = cv2.imread(path)
     # Get the original image dimensions
     h, w = image.shape[:2]
 
@@ -139,41 +141,39 @@ def _resize_image(path, width, height):
     filename_without_extension, extension = os.path.splitext(path)
 
     is_animated_webp = False
-    img = cv2.imread(path)
 
-    # with Image(filename=path) as src:
-    #     is_animated_webp = extension == ".webp" and len(src.sequence) > 1
+    with Image(filename=path) as src:
+        is_animated_webp = extension == ".webp" and len(src.sequence) > 1
 
-    #     if is_animated_webp:
-    #         img = src.convert("gif")
-    #     else:
-    #         img = src.clone()
+        if is_animated_webp:
+            img = src.convert("gif")
+        else:
+            img = src.clone()
 
-    # current_aspect_ratio = img.width / img.height
+    current_aspect_ratio = img.width / img.height
 
-    # if not width:
-    #     width = int(current_aspect_ratio * height)
+    if not width:
+        width = int(current_aspect_ratio * height)
 
-    # if not height:
-    #     height = int(width / current_aspect_ratio)
+    if not height:
+        height = int(width / current_aspect_ratio)
 
-    # desired_aspect_ratio = width / height
+    desired_aspect_ratio = width / height
 
     # Crop the image to fit the desired AR
-    # if desired_aspect_ratio > current_aspect_ratio:
-    #     newheight = int(img.width / desired_aspect_ratio)
-    #     img.crop(
-    #         0,
-    #         int((img.height / 2) - (newheight / 2)),
-    #         width=img.width,
-    #         height=newheight,
-    #     )
-    img = resize_with_aspect_ratio(img, width,height)
-    # else:
-    #     newwidth = int(img.height * desired_aspect_ratio)
-    #     img.crop(
-    #         int((img.width / 2) - (newwidth / 2)), 0, width=newwidth, height=img.height,
-    #     )
+    if desired_aspect_ratio > current_aspect_ratio:
+        newheight = int(img.width / desired_aspect_ratio)
+        img.crop(
+            0,
+            int((img.height / 2) - (newheight / 2)),
+            width=img.width,
+            height=newheight,
+        )
+    else:
+        newwidth = int(img.height * desired_aspect_ratio)
+        img.crop(
+            int((img.width / 2) - (newwidth / 2)), 0, width=newwidth, height=img.height,
+        )
 
     @timeout_decorator.timeout(settings.RESIZE_TIMEOUT)
     def resize(img, width, height):
@@ -319,7 +319,8 @@ def get_image(filename):
 
         if not os.path.isfile(resized_path) and (width or height):
             _clear_imagemagick_temp_files()
-            resized_image = _resize_image(path, width, height)
+            # resized_image = _resize_image(path, width, height)
+            resized_image=resize_with_aspect_ratio(path, width, height)
             resized_image.strip()
             resized_image.save(filename=resized_path)
             resized_image.close()
