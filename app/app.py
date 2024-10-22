@@ -321,8 +321,8 @@ def get_image(filename):
             _clear_imagemagick_temp_files()
             # resized_image = _resize_image(path, width, height)
             resized_image=resize_with_aspect_ratio(path, width, height)
-            resized_image.strip()
-            resized_image.save(filename=resized_path)
+            cv2.imwrite(resized_path, resized_image)
+            # resized_image.save(filename=resized_path)
             resized_image.close()
         return send_from_directory(settings.CACHE_DIR, resized_filename)
 
