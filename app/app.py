@@ -120,20 +120,27 @@ def _generate_random_filename():
 
 def resize_with_aspect_ratio(path, width=None, height=None):
     image = cv2.imread(path)
+    
+    if image is None:
+        raise ValueError("Image not found or the path is incorrect.")
+    
     # Get the original image dimensions
     h, w = image.shape[:2]
-
+    
     # Calculate the aspect ratio
     aspect_ratio = w / h
+    
+    if width is None and height is None:
+        raise ValueError("Either width or height must be specified.")
 
-    if width is None:
+    if width is not None:
         # Calculate height based on the specified width
-        new_height = int(height / aspect_ratio)
-        resized_image = cv2.resize(image, (height, new_height),interpolation= cv2.INTER_LINEAR)
+        new_height = int(width / aspect_ratio)
+        resized_image = cv2.resize(image, (width, new_height), interpolation=cv2.INTER_LINEAR)
     else:
         # Calculate width based on the specified height
-        new_width = int(width * aspect_ratio)
-        resized_image = cv2.resize(image, (new_width, width),interpolation= cv2.INTER_LINEAR)
+        new_width = int(height * aspect_ratio)
+        resized_image = cv2.resize(image, (new_width, height), interpolation=cv2.INTER_LINEAR)
 
     return resized_image
 
