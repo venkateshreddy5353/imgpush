@@ -119,7 +119,6 @@ def _generate_random_filename():
 
 
 def resize_with_aspect_ratio(path, width=None, height=None):
-    # Read the image
     image = cv2.imread(path)
     
     if image is None:
@@ -134,24 +133,30 @@ def resize_with_aspect_ratio(path, width=None, height=None):
     if width is None and height is None:
         raise ValueError("Either width or height must be specified.")
     
-    if width is not None:
-        # Calculate height based on the specified width, maintaining aspect ratio
+    # If both width and height are provided
+    if width is not None and height is not None:
+        # Calculate the scaling factors
+        width_factor = width / w
+        height_factor = height / h
+        
+        # Choose the smaller scaling factor to maintain aspect ratio
+        scaling_factor = min(width_factor, height_factor)
+        
+        # Calculate new dimensions
+        new_width = int(w * scaling_factor)
+        new_height = int(h * scaling_factor)
+        
+        resized_image = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_LINEAR)
+    
+    elif width is not None:
+        # Calculate height based on the specified width
         new_height = int(width / aspect_ratio)
         resized_image = cv2.resize(image, (width, new_height), interpolation=cv2.INTER_LINEAR)
+    
     else:
-        # Calculate width based on the specified height, maintaining aspect ratio
+        # Calculate width based on the specified height
         new_width = int(height * aspect_ratio)
         resized_image = cv2.resize(image, (new_width, height), interpolation=cv2.INTER_LINEAR)
-
-    # Check if the new dimensions match the desired aspect and fill if necessary
-    if width is not None and new_height != height:
-        # Creating a blank image with the desired size and filling it with black
-        final_image = cv2.copyMakeBorder(resized_image, 0, max(0, height - new_height), 0, 0, cv2.BORDER_CONSTANT, value=[0, 0, 0])
-        return final_image
-    elif height is not None and new_width != width:
-        # Creating a blank image with the desired size and filling it with black
-        final_image = cv2.copyMakeBorder(resized_image, 0, 0, 0, max(0, width - new_width), cv2.BORDER_CONSTANT, value=[0, 0, 0])
-        return final_image
 
     return resized_image
 
