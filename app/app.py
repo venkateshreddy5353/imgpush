@@ -21,6 +21,16 @@ from flask_basicauth import BasicAuth
 
 
 import settings
+import cv2
+
+# # Load the image
+# image = cv2.imread('input_image.jpg')
+
+# # Resize the image with an aspect ratio
+# resized_image = resize_with_aspect_ratio(image, width=300)
+
+# # Save the resized image
+# cv2.imwrite('resized_image.jpg', resized_image)
 
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app)
@@ -107,6 +117,24 @@ def _generate_random_filename():
         )
 
 
+def resize_with_aspect_ratio(image, width=None, height=None):
+    # Get the original image dimensions
+    h, w = image.shape[:2]
+
+    # Calculate the aspect ratio
+    aspect_ratio = w / h
+
+    if width is None:
+        # Calculate height based on the specified width
+        new_height = int(height / aspect_ratio)
+        resized_image = cv2.resize(image, (height, new_height))
+    else:
+        # Calculate width based on the specified height
+        new_width = int(width * aspect_ratio)
+        resized_image = cv2.resize(image, (new_width, width))
+
+    return resized_image
+
 def _resize_image(path, width, height):
     filename_without_extension, extension = os.path.splitext(path)
 
@@ -131,19 +159,20 @@ def _resize_image(path, width, height):
     desired_aspect_ratio = width / height
 
     # Crop the image to fit the desired AR
-    if desired_aspect_ratio > current_aspect_ratio:
-        newheight = int(img.width / desired_aspect_ratio)
-        img.crop(
-            0,
-            int((img.height / 2) - (newheight / 2)),
-            width=img.width,
-            height=newheight,
-        )
-    else:
-        newwidth = int(img.height * desired_aspect_ratio)
-        img.crop(
-            int((img.width / 2) - (newwidth / 2)), 0, width=newwidth, height=img.height,
-        )
+    # if desired_aspect_ratio > current_aspect_ratio:
+    #     newheight = int(img.width / desired_aspect_ratio)
+    #     img.crop(
+    #         0,
+    #         int((img.height / 2) - (newheight / 2)),
+    #         width=img.width,
+    #         height=newheight,
+    #     )
+    img = resize_with_aspect_ratio(img, width,height)
+    # else:
+    #     newwidth = int(img.height * desired_aspect_ratio)
+    #     img.crop(
+    #         int((img.width / 2) - (newwidth / 2)), 0, width=newwidth, height=img.height,
+    #     )
 
     @timeout_decorator.timeout(settings.RESIZE_TIMEOUT)
     def resize(img, width, height):

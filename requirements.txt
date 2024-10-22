@@ -10,4 +10,5 @@ nudenet
 jinja2
 itsdangerous
 Flask-BasicAuth
+opencv-python
 
