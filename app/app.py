@@ -317,7 +317,6 @@ def upload_image():
 
 
 @app.route("/<string:filename>")
-@basic_auth.required
 @limiter.exempt
 def get_image(filename):
     width = request.args.get("w", "")
