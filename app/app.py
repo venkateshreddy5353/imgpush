@@ -139,24 +139,25 @@ def _resize_image(path, width, height):
     filename_without_extension, extension = os.path.splitext(path)
 
     is_animated_webp = False
+    img = cv2.imread(path)
 
-    with Image(filename=path) as src:
-        is_animated_webp = extension == ".webp" and len(src.sequence) > 1
+    # with Image(filename=path) as src:
+    #     is_animated_webp = extension == ".webp" and len(src.sequence) > 1
 
-        if is_animated_webp:
-            img = src.convert("gif")
-        else:
-            img = src.clone()
+    #     if is_animated_webp:
+    #         img = src.convert("gif")
+    #     else:
+    #         img = src.clone()
 
-    current_aspect_ratio = img.width / img.height
+    # current_aspect_ratio = img.width / img.height
 
-    if not width:
-        width = int(current_aspect_ratio * height)
+    # if not width:
+    #     width = int(current_aspect_ratio * height)
 
-    if not height:
-        height = int(width / current_aspect_ratio)
+    # if not height:
+    #     height = int(width / current_aspect_ratio)
 
-    desired_aspect_ratio = width / height
+    # desired_aspect_ratio = width / height
 
     # Crop the image to fit the desired AR
     # if desired_aspect_ratio > current_aspect_ratio:
