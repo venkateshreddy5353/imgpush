@@ -216,6 +216,11 @@ def _resize_image(path, width, height):
 
     return img
 
+def get_extension_from_mime(mime_type):
+    if mime_type:
+        # Reverse lookup for the extension
+        return mimetypes.guess_extension(mime_type)
+    return None
 
 @app.route("/", methods=["GET"])
 @basic_auth.required
@@ -275,7 +280,10 @@ def upload_image():
             os.remove(tmp_filepath)
             return jsonify(error="Nudity not allowed"), 400
 
-    file_filetype = mimetypes.guess_extension(tmp_filepath)
+    mime_type, _ = mimetypes.guess_type(tmp_filepath)
+    file_filetype = get_extension_from_mime(mime_type)
+    if file_filetype:
+        file_filetype = file_filetype[1:] 
     if file_filetype not in settings.ALLOWED_FILETYPES:
         return jsonify(error="File type is not allowed"), 400
         
