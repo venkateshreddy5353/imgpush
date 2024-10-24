@@ -98,25 +98,32 @@ def _clear_imagemagick_temp_files():
             os.remove(filepath)
 
 
-def _get_random_filename():
+def _get_random_filename(original_extension=None):
     random_string = _generate_random_filename()
-    if settings.NAME_STRATEGY == "randomstr":
-        file_exists = len(glob.glob(f"{settings.IMAGES_DIR}/{random_string}.*")) > 0
-        if file_exists:
-            return _get_random_filename()
+    
+    # Retain the original file extension if provided
+    if original_extension:
+        random_string += f".{original_extension}"
+
+    # Check if a file with the same name already exists
+    file_exists = len(glob.glob(f"{settings.IMAGES_DIR}/{random_string}")) > 0
+    if file_exists:
+        return _get_random_filename(original_extension)
+    
     return random_string
 
 
 def _generate_random_filename():
     if settings.NAME_STRATEGY == "uuidv4":
         return str(uuid.uuid4())
-    if settings.NAME_STRATEGY == "randomstr":
+    elif settings.NAME_STRATEGY == "randomstr":
         return "".join(
             random.choices(
                 string.ascii_lowercase + string.digits + string.ascii_uppercase, k=5
             )
         )
-
+    else:
+        raise ValueError("Invalid NAME_STRATEGY specified in settings.")
 
 def resize_with_aspect_ratio(path, width=None, height=None):
     image = cv2.imread(path)
@@ -242,56 +249,58 @@ def liveness():
         ]
     )
 )
-def upload_image():
+def upload_file():
     _clear_imagemagick_temp_files()
 
-    is_svg = False
-
-    random_string = _get_random_filename()
-    tmp_filepath = os.path.join("/tmp/", random_string)
-
+    # Check for uploaded file or URL
     if "file" in request.files:
         file = request.files["file"]
-        is_svg = file.filename.endswith(".svg")
+        original_filename = file.filename
+        original_extension = original_filename.rsplit(".", 1)[-1] if "." in original_filename else "txt"  # Default to 'txt' if no extension
+        random_string = _get_random_filename(original_extension)
+        tmp_filepath = os.path.join("/tmp/", random_string)
         file.save(tmp_filepath)
     elif "url" in request.json:
+        random_string = _get_random_filename()
+        tmp_filepath = os.path.join("/tmp/", random_string)
         urllib.request.urlretrieve(request.json["url"], tmp_filepath)
     else:
         return jsonify(error="File is missing!"), 400
 
+    # Check for nude content if required
     if settings.NUDE_FILTER_MAX_THRESHOLD:
         unsafe_val = nude_classifier.classify(tmp_filepath).get(tmp_filepath, dict()).get("unsafe", 0)
         if unsafe_val >= settings.NUDE_FILTER_MAX_THRESHOLD:
             os.remove(tmp_filepath)
             return jsonify(error="Nudity not allowed"), 400
 
+    # Determine the file type
     file_filetype = filetype.guess_extension(tmp_filepath)
     if file_filetype not in settings.ALLOWED_FILETYPES:
         return jsonify(error="File type is not allowed"), 400
-        
+
     output_type = (settings.OUTPUT_TYPE or file_filetype).replace(".", "")
-
-    if file_filetype == "mp4":
-        output_type = file_filetype
-    elif is_svg:
-        output_type = "svg"
-
-    error = None
-
     output_filename = os.path.basename(tmp_filepath) + f".{output_type}"
     output_path = os.path.join(settings.IMAGES_DIR, output_filename)
+
+    error = None
 
     try:
         if os.path.exists(output_path):
             raise CollisionError
-        if output_type == "mp4":
+
+        if file_filetype in ["csv", "doc", "docx", "pdf", "txt", "ppt", "pptx", "xls", "xlsx", "zip", "rar", "js", "html", "css", "xml", "json", "mp3", "avi", "mov"]:
+            # Move files directly to the output path for non-image/video types
+            shutil.move(tmp_filepath, output_path)
+        elif file_filetype == "mp4":
             if settings.ALLOW_VIDEO:
                 shutil.move(tmp_filepath, output_path)
             else:
                 error = "Invalid Filetype"
-        elif output_type == "svg":
+        elif file_filetype == "svg":
             shutil.move(tmp_filepath, output_path)
         else:
+            # Process image files using ImageMagick
             with Image(filename=tmp_filepath) as img:
                 img.strip()
                 if output_type not in ["gif", "webp"]:
@@ -302,18 +311,21 @@ def upload_image():
                 else:
                     with img.convert(output_type) as converted:
                         converted.save(filename=output_path)
+
     except MissingDelegateError:
         error = "Invalid Filetype"
+    except CollisionError:
+        error = "File already exists"
     finally:
         if os.path.exists(tmp_filepath):
             os.remove(tmp_filepath)
 
     if error:
         return jsonify(error=error), 400
-    
-    file_size=os.path.getsize(output_path)
 
-    return jsonify(filename=output_filename,path=f"https://cdn.meepaisa.com/{output_filename}",size=file_size)
+    file_size = os.path.getsize(output_path)
+
+    return jsonify(filename=output_filename, path=f"https://cdn.meepaisa.com/{output_filename}", size=file_size)
 
 
 @app.route("/<string:filename>")
