@@ -8,7 +8,7 @@ import string
 import urllib.request
 import uuid
 
-import filetype
+import mimetypes
 import timeout_decorator
 from flask import Flask, jsonify, request, send_from_directory, Response
 from flask_cors import CORS
@@ -98,14 +98,12 @@ def _clear_imagemagick_temp_files():
             os.remove(filepath)
 
 
-def _get_random_filename(original_extension=None):
+def _get_random_filename():
     random_string = _generate_random_filename()
-    if original_extension:
-        random_string += f".{original_extension}"
     if settings.NAME_STRATEGY == "randomstr":
         file_exists = len(glob.glob(f"{settings.IMAGES_DIR}/{random_string}.*")) > 0
         if file_exists:
-            return _get_random_filename(original_extension)
+            return _get_random_filename()
     return random_string
 
 
@@ -248,22 +246,15 @@ def upload_image():
     _clear_imagemagick_temp_files()
 
     is_svg = False
-        
+
+    random_string = _get_random_filename()
+    tmp_filepath = os.path.join("/tmp/", random_string)
 
     if "file" in request.files:
         file = request.files["file"]
-        original_filename = file.filename
-        original_extension = original_filename.rsplit(".", 1)[-1] if "." in original_filename else "txt"  # Default to 'txt' if no extension
-        random_string = _get_random_filename(original_extension)
-        tmp_filepath = os.path.join("/tmp/", random_string)
         is_svg = file.filename.endswith(".svg")
         file.save(tmp_filepath)
     elif "url" in request.json:
-        url = request.json["url"]
-        original_filename = url.split("/")[-1]
-        original_extension = original_filename.rsplit(".", 1)[-1] if "." in original_filename else "txt"
-        random_string = _get_random_filename(original_extension)
-        tmp_filepath = os.path.join("/tmp/", random_string)
         urllib.request.urlretrieve(request.json["url"], tmp_filepath)
     else:
         return jsonify(error="File is missing!"), 400
@@ -274,7 +265,7 @@ def upload_image():
             os.remove(tmp_filepath)
             return jsonify(error="Nudity not allowed"), 400
 
-    file_filetype = filetype.guess_extension(tmp_filepath)
+    file_filetype = mimetypes.guess_extension(tmp_filepath)
     if file_filetype not in settings.ALLOWED_FILETYPES:
         return jsonify(error="File type is not allowed"), 400
         
