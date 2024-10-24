@@ -309,6 +309,9 @@ def upload_image():
                 error = "Invalid Filetype"
         elif output_type == "svg":
             shutil.move(tmp_filepath, output_path)
+        elif output_type == "csv":
+            # Optionally, process CSV files here
+            shutil.move(tmp_filepath, output_path)  # Move the CSV file to the output directory
         else:
             with Image(filename=tmp_filepath) as img:
                 img.strip()
